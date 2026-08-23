@@ -23,10 +23,13 @@ python3 -m http.server 8080
 ## 탭 1: 지수 · 환율
 
 - 데이터: Yahoo Finance 비공식 chart API (`query1.finance.yahoo.com/v8/finance/chart/...`)
-- Yahoo API가 브라우저 CORS를 허용하지 않으므로 공개 CORS 프록시(allorigins.win,
-  실패 시 corsproxy.io)를 경유해서 요청합니다. 프록시는 제3자 무료 서비스라 간헐적으로
-  느리거나 다운될 수 있습니다 — 계속 문제가 되면 `js/app.js`의 `CORS_PROXIES` 배열에
-  다른 프록시를 추가하거나, 직접 백엔드를 두는 방식으로 바꾸는 걸 권장합니다.
+- Yahoo API가 브라우저 CORS를 허용하지 않으므로 공개 CORS 프록시(`js/app.js`의
+  `CORS_PROXIES` 배열, 현재 allorigins.win → cors.eu.org → codetabs.com 순서로 시도)를
+  경유해서 요청합니다. 프록시는 제3자 무료 서비스라 간헐적으로 느리거나 다운될 수 있고,
+  드물게 서비스 정책 자체가 바뀌어 완전히 막히기도 합니다(예: corsproxy.io가 2026-08에
+  무료 플랜에서 서버 간 요청을 차단하도록 정책을 변경해 목록에서 제외함). 데이터 수신
+  실패가 계속되면 `CORS_PROXIES`에 다른 프록시를 추가/교체하거나, 직접 백엔드를 두는
+  방식으로 바꾸는 걸 권장합니다.
 - 종목: KOSPI, KOSDAQ, S&P 500, 다우존스, 나스닥, USD/EUR/JPY/CNY-KRW 환율
 - 기간: 1개월 ~ 5년
 

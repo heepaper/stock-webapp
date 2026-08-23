@@ -17,12 +17,16 @@ const statusMsg = document.getElementById("statusMsg");
 
 let priceChart = null;
 
-// Yahoo Finance chart API has no reliable CORS headers for browser fetches,
-// so requests are routed through a public CORS proxy. Two proxies are tried
-// in order since free proxies are occasionally rate-limited or down.
+// Yahoo/Naver chart APIs have no reliable CORS headers for browser fetches,
+// so requests are routed through a public CORS proxy, trying each in order
+// until one works. Free proxies are occasionally rate-limited or down, and
+// corsproxy.io in particular stopped serving non-browser/proxy traffic on
+// its free plan — keep this list to services that don't require signup or
+// domain registration, and don't be surprised if it needs updating again.
 const CORS_PROXIES = [
   (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  (url) => `https://cors.eu.org/${url}`,
+  (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
 ];
 
 function intervalForRange(range) {
