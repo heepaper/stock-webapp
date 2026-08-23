@@ -14,7 +14,7 @@
 
   <nav class="tab-nav" id="tabNav">
     <button class="tab-btn active" data-tab="tab-index-fx">지수 · 환율</button>
-    <button class="tab-btn" data-tab="tab-placeholder-2" disabled>탭 2 (준비중)</button>
+    <button class="tab-btn" data-tab="tab-ma200">200일선 대시보드</button>
     <button class="tab-btn" data-tab="tab-placeholder-3" disabled>탭 3 (준비중)</button>
   </nav>
 
@@ -57,8 +57,14 @@
       </div>
     </section>
 
-    <section id="tab-placeholder-2" class="tab-panel">
-      <p class="placeholder-text">추후 작성 예정입니다.</p>
+    <section id="tab-ma200" class="tab-panel">
+      <div class="controls">
+        <button id="ma200RefreshBtn">새로고침</button>
+      </div>
+
+      <div id="ma200StatusMsg" class="status-msg"></div>
+
+      <div id="ma200Cards" class="stock-cards"></div>
     </section>
 
     <section id="tab-placeholder-3" class="tab-panel">

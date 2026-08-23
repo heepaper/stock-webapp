@@ -30,7 +30,20 @@ python3 -m http.server 8080
 - 종목: KOSPI, KOSDAQ, S&P 500, 다우존스, 나스닥, USD/EUR/JPY/CNY-KRW 환율
 - 기간: 1개월 ~ 5년
 
-## 탭 2, 3
+## 탭 2: 200일선 대시보드
+
+- 데이터: 네이버 증권 비공식 차트 API (`fchart.stock.naver.com/sise.nhn`, XML 응답)
+- 탭 1과 동일하게 `CORS_PROXIES`를 경유해서 요청합니다.
+- 종목: KODEX 200, TIGER 미국S&P500, ACE KRX금현물, SK하이닉스 (코드는 `js/app.js`의
+  `MA200_ITEMS`에서 수정/추가 가능)
+- 종목별로 다음을 계산해 카드 형태로 표시합니다.
+  - 200일 이동평균선 대비 괴리율
+  - 사이클 고점(직전에 종가가 200일선을 하회한 시점 이후 고점) 대비 낙폭
+  - 최근 1년(250 영업일) 고점 대비 낙폭
+  - 최근 90일 종가/200일선 미니 차트
+- 카드를 클릭하면 네이버 증권 모바일 종목 페이지로 이동합니다.
+
+## 탭 3
 
 추후 기능이 정해지면 `index.html`의 `.tab-btn` / `.tab-panel` 쌍을 추가하고
 `disabled` 속성을 제거하는 방식으로 확장하면 됩니다.
@@ -38,7 +51,8 @@ python3 -m http.server 8080
 ## 진행 상황
 
 - [x] 탭 구조 + 탭 1(지수·환율 종가 차트) 구현, 헤드리스 브라우저로 UI 동작 확인
-- [x] 이 저장소(`heepaper/Heepaper-claude-code`)의 `stock-webapp` 폴더로 커밋
-- [ ] 별도 저장소(`heepaper/stock-webapp`)로 분리 시도 — 세션 권한 승인 문제로 보류
-- [ ] GitHub Pages로 공개 URL 발급 (저장소를 public으로 전환해야 함)
-- [ ] 탭 2, 3 기능 정의 및 구현
+- [x] 별도 저장소(`heepaper/stock-webapp`)로 분리
+- [x] GitHub Pages 공개 URL 발급 (`Settings → Pages → Source: GitHub Actions` 활성화 후 배포 성공)
+- [x] 탭 2(200일선 대시보드) 구현 — 계산/렌더링 로직은 헤드리스 브라우저로 검증,
+      실제 네이버 API 응답은 개발 환경의 네트워크 제한으로 미검증 (배포 후 확인 필요)
+- [ ] 탭 3 기능 정의 및 구현
