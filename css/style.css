@@ -146,6 +146,7 @@ body {
 }
 
 .stock-card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.9rem;
@@ -155,6 +156,23 @@ body {
   padding: 0.9rem 1rem;
   text-decoration: none;
   color: inherit;
+}
+
+.stock-card-remove {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.15rem 0.3rem;
+}
+
+.stock-card-remove:hover {
+  color: var(--error);
 }
 
 .stock-card:hover {
@@ -220,4 +238,102 @@ body {
 
 .stock-card-ma {
   color: #afd485;
+}
+
+.ma200-add-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ma200-add-panel[hidden] {
+  display: none;
+}
+
+.ma200-add-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ma200-add-row select,
+.ma200-add-row input[type="text"] {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.9rem;
+}
+
+.ma200-add-row input[type="text"] {
+  flex: 1;
+  min-width: 180px;
+}
+
+.ma200-add-row button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ma200-add-row button:hover {
+  background: var(--accent-dim);
+}
+
+.ma200-add-row button:disabled {
+  background: var(--accent-dim);
+  cursor: not-allowed;
+}
+
+.ma200-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.ma200-search-result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.45rem 0.7rem;
+  color: var(--text);
+}
+
+.ma200-search-result-code {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin-left: 0.4rem;
+}
+
+.ma200-search-result-row button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.ma200-add-msg {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  min-height: 1.2rem;
 }

@@ -60,6 +60,21 @@
     <section id="tab-ma200" class="tab-panel">
       <div class="controls">
         <button id="ma200RefreshBtn">새로고침</button>
+        <button id="ma200AddToggleBtn">+ 종목 추가</button>
+      </div>
+
+      <div id="ma200AddPanel" class="ma200-add-panel" hidden>
+        <div class="ma200-add-row">
+          <select id="ma200MarketSelect">
+            <option value="kr">한국 (네이버)</option>
+            <option value="us">미국 (야후 파이낸스)</option>
+          </select>
+          <input type="text" id="ma200SearchInput" placeholder="종목명 검색 또는 코드/티커 직접 입력">
+          <button id="ma200SearchBtn">검색</button>
+          <button id="ma200DirectAddBtn">코드/티커로 바로 추가</button>
+        </div>
+        <div id="ma200SearchResults" class="ma200-search-results"></div>
+        <div id="ma200AddMsg" class="ma200-add-msg"></div>
       </div>
 
       <div id="ma200StatusMsg" class="status-msg"></div>

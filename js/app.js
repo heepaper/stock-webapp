@@ -150,22 +150,56 @@ loadBtn.addEventListener("click", loadChart);
 window.addEventListener("DOMContentLoaded", loadChart);
 
 // ---- Tab 2: 200-day MA / cycle & 1-year high drawdown dashboard ----
-const MA200_ITEMS = [
-  { key: "kodex200", name: "KODEX 200", code: "069500" },
-  { key: "snp500", name: "TIGER 미국S&P500", code: "360750" },
-  { key: "gold", name: "ACE KRX금현물", code: "411060" },
-  { key: "hynix", name: "SK하이닉스", code: "000660" },
+const MA200_DEFAULT_ITEMS = [
+  { key: "kr-069500", name: "KODEX 200", code: "069500", market: "kr" },
+  { key: "kr-360750", name: "TIGER 미국S&P500", code: "360750", market: "kr" },
+  { key: "kr-411060", name: "ACE KRX금현물", code: "411060", market: "kr" },
+  { key: "kr-000660", name: "SK하이닉스", code: "000660", market: "kr" },
 ];
+const MA200_STORAGE_KEY = "ma200_items_v1";
 
 const ma200RefreshBtn = document.getElementById("ma200RefreshBtn");
 const ma200StatusMsg = document.getElementById("ma200StatusMsg");
 const ma200Cards = document.getElementById("ma200Cards");
+const ma200AddToggleBtn = document.getElementById("ma200AddToggleBtn");
+const ma200AddPanel = document.getElementById("ma200AddPanel");
+const ma200MarketSelect = document.getElementById("ma200MarketSelect");
+const ma200SearchInput = document.getElementById("ma200SearchInput");
+const ma200SearchBtn = document.getElementById("ma200SearchBtn");
+const ma200DirectAddBtn = document.getElementById("ma200DirectAddBtn");
+const ma200SearchResults = document.getElementById("ma200SearchResults");
+const ma200AddMsg = document.getElementById("ma200AddMsg");
 
 let ma200Loaded = false;
 const ma200Charts = {};
 
+function loadMa200ItemList() {
+  try {
+    const raw = localStorage.getItem(MA200_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+  } catch (err) {
+    // corrupt/unavailable storage — fall back to defaults
+  }
+  return null;
+}
+
+function saveMa200ItemList() {
+  try {
+    localStorage.setItem(MA200_STORAGE_KEY, JSON.stringify(ma200ItemList));
+  } catch (err) {
+    // storage unavailable (private mode, quota, etc.) — in-memory state still works
+  }
+}
+
+let ma200ItemList = loadMa200ItemList() || MA200_DEFAULT_ITEMS.slice();
+
 function naverStockUrl(code) {
   return `https://m.stock.naver.com/domestic/stock/${code}/total`;
+}
+
+function yahooFinanceUrl(symbol) {
+  return `https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}`;
 }
 
 function naverChartApiUrl(code) {
@@ -204,11 +238,73 @@ function parseNaverChartXml(xml) {
   return { dates, closes };
 }
 
+async function fetchUsCloses(symbol) {
+  const data = await fetchViaProxies(yahooChartApiUrl(symbol, "2y"));
+  const result = data?.chart?.result?.[0];
+  const error = data?.chart?.error;
+  if (error) throw new Error(error.description || "데이터 조회 오류");
+  if (!result) throw new Error("데이터가 없습니다");
+
+  const timestamps = result.timestamp || [];
+  const rawCloses = result.indicators?.quote?.[0]?.close || [];
+  const dates = [];
+  const closes = [];
+  for (let i = 0; i < timestamps.length; i++) {
+    if (rawCloses[i] === null || rawCloses[i] === undefined) continue;
+    dates.push(formatDate(timestamps[i]));
+    closes.push(Number(rawCloses[i]));
+  }
+  return { dates, closes, meta: result.meta };
+}
+
 async function fetchMa200Item(item) {
+  if (item.market === "us") {
+    const { dates, closes } = await fetchUsCloses(item.code);
+    if (closes.length === 0) throw new Error("표시할 데이터가 없습니다");
+    return { ...item, dates, closes };
+  }
+
   const xml = await fetchTextViaProxies(naverChartApiUrl(item.code));
   const { dates, closes } = parseNaverChartXml(xml);
   if (closes.length === 0) throw new Error("데이터가 없습니다");
   return { ...item, dates, closes };
+}
+
+// ---- Naver autocomplete search (best-effort; unofficial/undocumented API) ----
+function naverAutoCompleteUrl(query) {
+  return `https://ac.stock.naver.com/ac?q=${encodeURIComponent(query)}&q_enc=utf-8&st=111&frm=stock&r_format=json&r_enc=utf-8&r_unicode=0&t_koreng=1&run=2`;
+}
+
+async function searchKrStocks(query) {
+  const text = await fetchTextViaProxies(naverAutoCompleteUrl(query));
+  const data = JSON.parse(text);
+  const groups = Array.isArray(data.items) ? data.items : [];
+  const results = [];
+  groups.forEach((group) => {
+    if (!Array.isArray(group)) return;
+    group.forEach((entry) => {
+      if (!Array.isArray(entry)) return;
+      const code = entry[0];
+      const name = entry[1];
+      if (typeof code === "string" && /^\d{6}$/.test(code) && name) {
+        results.push({ code, name });
+      }
+    });
+  });
+  return results;
+}
+
+// ---- Yahoo Finance search (US tickers) ----
+function yahooSearchUrl(query) {
+  return `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&lang=en-US&region=US&quotesCount=8&newsCount=0`;
+}
+
+async function searchUsStocks(query) {
+  const data = await fetchViaProxies(yahooSearchUrl(query));
+  const quotes = Array.isArray(data?.quotes) ? data.quotes : [];
+  return quotes
+    .filter((q) => q.symbol && (q.quoteType === "EQUITY" || q.quoteType === "ETF"))
+    .map((q) => ({ code: q.symbol, name: q.shortname || q.longname || q.symbol }));
 }
 
 function computeMA200(closes) {
@@ -247,12 +343,13 @@ function computeYearMDD(closes) {
 function buildMa200Card(item) {
   const card = document.createElement("a");
   card.className = "stock-card";
-  card.href = naverStockUrl(item.code);
+  card.href = item.market === "us" ? yahooFinanceUrl(item.code) : naverStockUrl(item.code);
   card.target = "_blank";
   card.rel = "noopener noreferrer";
   card.id = `ma200-card-${item.key}`;
 
   card.innerHTML = `
+    <button class="stock-card-remove" type="button" title="삭제">×</button>
     <div class="stock-card-chart">
       <canvas id="ma200-chart-${item.key}" width="160" height="60"></canvas>
     </div>
@@ -271,7 +368,24 @@ function buildMa200Card(item) {
       </div>
     </div>
   `;
+
+  card.querySelector(".stock-card-remove").addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    removeMa200Item(item.key);
+  });
+
   return card;
+}
+
+function removeMa200Item(key) {
+  ma200ItemList = ma200ItemList.filter((it) => it.key !== key);
+  saveMa200ItemList();
+  if (ma200Charts[key]) {
+    ma200Charts[key].destroy();
+    delete ma200Charts[key];
+  }
+  document.getElementById(`ma200-card-${key}`)?.remove();
 }
 
 function renderMa200Card(data) {
@@ -349,13 +463,13 @@ async function loadMa200Dashboard() {
   setMa200Status("불러오는 중...");
   ma200Cards.innerHTML = "";
 
-  MA200_ITEMS.forEach((item) => ma200Cards.appendChild(buildMa200Card(item)));
+  ma200ItemList.forEach((item) => ma200Cards.appendChild(buildMa200Card(item)));
 
-  const results = await Promise.allSettled(MA200_ITEMS.map(fetchMa200Item));
+  const results = await Promise.allSettled(ma200ItemList.map(fetchMa200Item));
 
   let errorCount = 0;
   results.forEach((result, idx) => {
-    const item = MA200_ITEMS[idx];
+    const item = ma200ItemList[idx];
     if (result.status === "fulfilled") {
       renderMa200Card(result.value);
     } else {
@@ -368,14 +482,109 @@ async function loadMa200Dashboard() {
 
   setMa200Status(
     errorCount === 0
-      ? `${MA200_ITEMS.length}개 종목 업데이트 완료`
+      ? `${ma200ItemList.length}개 종목 업데이트 완료`
       : `${errorCount}개 종목 데이터를 불러오지 못했습니다`,
     errorCount > 0
   );
   ma200RefreshBtn.disabled = false;
 }
 
+async function addMa200Item({ name, code, market }) {
+  const key = `${market}-${code}`;
+  if (ma200ItemList.some((it) => it.key === key)) {
+    ma200AddMsg.textContent = "이미 추가된 종목입니다.";
+    return;
+  }
+
+  const item = { key, name: name || code, code, market };
+  ma200ItemList.push(item);
+  saveMa200ItemList();
+
+  ma200Cards.appendChild(buildMa200Card(item));
+  ma200AddMsg.textContent = `${item.name} 추가됨 · 불러오는 중...`;
+
+  try {
+    const data = await fetchMa200Item(item);
+    renderMa200Card(data);
+    ma200AddMsg.textContent = `${item.name} 추가 완료`;
+  } catch (err) {
+    const card = document.getElementById(`ma200-card-${item.key}`);
+    const gapEl = card?.querySelector('[data-field="gap"]');
+    if (gapEl) gapEl.textContent = "⚠️ 데이터 수신 실패";
+    ma200AddMsg.textContent = `${item.name} 데이터 조회 실패: ${err.message}`;
+  }
+}
+
+function renderMa200SearchResults(results, market) {
+  ma200SearchResults.innerHTML = "";
+  if (results.length === 0) {
+    ma200SearchResults.textContent = "검색 결과가 없습니다. 코드/티커를 알고 있다면 '코드/티커로 바로 추가'를 이용해주세요.";
+    return;
+  }
+  results.slice(0, 8).forEach((r) => {
+    const row = document.createElement("div");
+    row.className = "ma200-search-result-row";
+
+    const label = document.createElement("span");
+    label.textContent = r.name;
+    const codeSpan = document.createElement("span");
+    codeSpan.className = "ma200-search-result-code";
+    codeSpan.textContent = r.code;
+    label.appendChild(codeSpan);
+
+    const addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.textContent = "추가";
+    addBtn.addEventListener("click", () => addMa200Item({ name: r.name, code: r.code, market }));
+
+    row.appendChild(label);
+    row.appendChild(addBtn);
+    ma200SearchResults.appendChild(row);
+  });
+}
+
 ma200RefreshBtn.addEventListener("click", loadMa200Dashboard);
+
+ma200AddToggleBtn.addEventListener("click", () => {
+  ma200AddPanel.hidden = !ma200AddPanel.hidden;
+});
+
+ma200SearchBtn.addEventListener("click", async () => {
+  const market = ma200MarketSelect.value;
+  const query = ma200SearchInput.value.trim();
+  if (!query) {
+    ma200AddMsg.textContent = "검색어를 입력해주세요.";
+    return;
+  }
+
+  ma200AddMsg.textContent = "검색 중...";
+  ma200SearchResults.innerHTML = "";
+  ma200SearchBtn.disabled = true;
+  try {
+    const results = market === "us" ? await searchUsStocks(query) : await searchKrStocks(query);
+    ma200AddMsg.textContent = "";
+    renderMa200SearchResults(results, market);
+  } catch (err) {
+    ma200AddMsg.textContent = `검색 실패: ${err.message} (코드/티커를 알고 있다면 '코드/티커로 바로 추가'를 이용해주세요)`;
+  } finally {
+    ma200SearchBtn.disabled = false;
+  }
+});
+
+ma200DirectAddBtn.addEventListener("click", () => {
+  const market = ma200MarketSelect.value;
+  const raw = ma200SearchInput.value.trim();
+  if (!raw) {
+    ma200AddMsg.textContent = "코드 또는 티커를 입력해주세요.";
+    return;
+  }
+  if (market === "kr" && !/^\d{6}$/.test(raw)) {
+    ma200AddMsg.textContent = "한국 종목 코드는 6자리 숫자여야 합니다. (예: 005930)";
+    return;
+  }
+  const code = market === "us" ? raw.toUpperCase() : raw;
+  addMa200Item({ name: code, code, market });
+});
 
 document.querySelectorAll(".tab-btn").forEach((btn) => {
   if (btn.dataset.tab !== "tab-ma200") return;
