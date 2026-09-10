@@ -58,6 +58,15 @@ python3 -m http.server 8080
 추후 기능이 정해지면 `index.html`의 `.tab-btn` / `.tab-panel` 쌍을 추가하고
 `disabled` 속성을 제거하는 방식으로 확장하면 됩니다.
 
+## `obsidian-vault-kit/`
+
+주식 웹앱과는 별개로, 이 리포에 함께 올려둔 폴더입니다. 개인 Obsidian vault를
+Claude Code로 관리하면서 만든 **frontmatter 템플릿 + Claude Code 스킬(유튜브 요약,
+vault 점검용 wiki-lint, 키워드 검색용 bm25-search 등) + 운영 정책** 모음이며,
+다른 컴퓨터(회사 PC 등)에서 내려받아 바로 적용할 수 있도록 개인 vault 이름·경로 같은
+식별 정보는 전부 제거·일반화해뒀습니다. 자세한 내용과 적용 방법은
+[`obsidian-vault-kit/README.md`](obsidian-vault-kit/README.md) 참고.
+
 ## 진행 상황
 
 - [x] 탭 구조 + 탭 1(지수·환율 종가 차트) 구현, 헤드리스 브라우저로 UI 동작 확인
