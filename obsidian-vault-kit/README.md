@@ -8,6 +8,7 @@
 obsidian-vault-kit/
 ├── templates/     # frontmatter 템플릿
 ├── skills/        # Claude Code 스킬 (Agent Skills)
+├── guides/        # 사용법 가이드(코드 스니펫 포함, 스킬이 아닌 참고 문서)
 └── policy/        # vault 운영 정책 문서
 ```
 
@@ -32,6 +33,9 @@ Claude Code의 `.claude/skills/` 아래에 그대로 복사해서 쓰는 Agent S
 
 `obsidian-markdown` / `obsidian-bases` / `defuddle` 세 개는 Obsidian CEO Steph Ango(kepano)가 공개한 [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills)를 그대로 vendoring한 것입니다(MIT License, 각 폴더의 `LICENSE-upstream` 참고). 나머지(`wiki-lint`, `bm25-search`, 유튜브 요약 스킬 2종)는 자체 제작입니다.
 
+### `guides/`
+- `dataview-calendar-guide.md` — Dataview(`dataviewjs`)만으로 구현하는 월별 캘린더 뷰 가이드. 노트 안 표 데이터를 캘린더 그리드로 그리는 패턴(단일 노트/다중 노트 취합)과, 구글·네이버·아웃룩 같은 외부 캘린더(ICS)를 같은 그리드에 겹쳐 보는 확장까지 포함. 별도 플러그인 설치 없이 Dataview 플러그인 하나로 동작.
+
 ### `policy/POLICY.md`
 폴더/파일 명명 규칙, frontmatter 작성 원칙, 클리핑 이미지 저장 기준, 오디오 녹음 처리 기준, Obsidian 확장 마크다운 문법 적용 정책 등 — 특정 vault의 개인 폴더 구성과 무관하게 재사용 가능한 일반 규칙만 정리했습니다.
 
@@ -41,8 +45,9 @@ Claude Code의 `.claude/skills/` 아래에 그대로 복사해서 쓰는 Agent S
 2. `templates/*.md`를 자신의 vault `_templates/` 폴더로 복사하고, 필요에 맞게 필드를 채운다.
 3. `skills/*` 각각을 Claude Code 프로젝트의 `.claude/skills/` 아래로 복사(또는 심볼릭 링크/주니션)한다.
 4. 복사한 `SKILL.md` 안의 `<YOUR_VAULT_NAME>`, `D:\<path-to-your-vault>\<YOUR_VAULT_NAME>` 부분을 실제 vault 이름·경로로 치환한다.
-5. `policy/POLICY.md`를 참고해서 자신의 vault용 `CLAUDE.md`(또는 프로젝트 지침 파일)에 필요한 규칙을 옮겨 적는다 — 그대로 복사하기보다는 자신의 vault 구조에 맞게 대입해서 쓰는 것을 권장.
+5. `guides/*`는 설치가 필요 없는 참고 문서 — 필요한 `dataviewjs` 코드블록을 그대로 복사해서 새 노트에 붙여넣으면 됨(사전 조건: Dataview 플러그인 설치).
+6. `policy/POLICY.md`를 참고해서 자신의 vault용 `CLAUDE.md`(또는 프로젝트 지침 파일)에 필요한 규칙을 옮겨 적는다 — 그대로 복사하기보다는 자신의 vault 구조에 맞게 대입해서 쓰는 것을 권장.
 
 ## 라이선스
 - `skills/obsidian-markdown/`, `skills/obsidian-bases/`, `skills/defuddle/`: 각 폴더의 `LICENSE-upstream`(MIT, kepano) 참고
-- 그 외(`wiki-lint`, `bm25-search`, 유튜브 요약 스킬 2종, `templates/`, `policy/`): 별도 라이선스 명시 없음, 자유롭게 참고·변형해서 사용
+- 그 외(`wiki-lint`, `bm25-search`, 유튜브 요약 스킬 2종, `templates/`, `guides/`, `policy/`): 별도 라이선스 명시 없음, 자유롭게 참고·변형해서 사용
