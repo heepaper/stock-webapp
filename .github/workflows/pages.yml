@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - claude/heepaper-stock-webapp-work-90dp6y
   workflow_dispatch:
 
 permissions:
